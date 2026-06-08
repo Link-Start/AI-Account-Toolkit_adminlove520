@@ -1,7 +1,7 @@
 # 🛠️ AI-Account-Toolkit
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-2.5.0-orange.svg?style=flat-square)](https://github.com/adminlove520/AI-Account-Toolkit/releases)
+[![Version](https://img.shields.io/badge/Version-2.6.0-orange.svg?style=flat-square)](https://github.com/adminlove520/AI-Account-Toolkit/releases)
 [![GitHub stars](https://img.shields.io/github/stars/adminlove520/AI-Account-Toolkit?style=flat-square&color=gold)](https://github.com/adminlove520/AI-Account-Toolkit/stargazers)
 [![GitHub last commit](https://img.shields.io/github/last-commit/adminlove520/AI-Account-Toolkit?style=flat-square)](https://github.com/adminlove520/AI-Account-Toolkit/commits/main)
 
@@ -33,6 +33,7 @@
 AI-Account-Toolkit/
 ├── 📂 CPAtools/                # Codex 账号状态管理与自动清理
 ├── 📂 GPT-team/                # ChatGPT Team 协议注册机 (CF 邮箱版)
+├── 📂 team/                    # ChatGPT Team 纯协议注册机 (支持续签)
 ├── 📂 team_all-in-one/         # Team 注册一站式管理后台
 ├── 📂 codex-oauth-automation/  # Codex OAuth 自动化 Chrome 插件
 ├── 📂 Extensions/              # 浏览器自动化增强插件集
@@ -60,6 +61,7 @@ AI-Account-Toolkit/
 | :--- | :--- | :--- |
 | **CPAtools** | 批量验证 Codex 账号状态，自动移除失效 Token。 | [README](CPAtools/README.md) |
 | **GPT-team** | 纯协议注册 ChatGPT Team 子号，支持拉人、授权与自动上传。 | [README](GPT-team/README.md) |
+| **team** | ChatGPT Team 纯协议注册机，支持 Token 续签与批量注册。 | [README](team/README.md) |
 | **team-all-in-one** | 可视化注册管理系统，支持多邮箱源、代理轮换及 Token 导出。 | [README](team_all-in-one/README.md) |
 | **OpenAI Orchestrator** | 自动化维护账号池，支持 Token 状态监控与多平台分发。 | [V6 README](openai_pool_orchestrator-V6/README.md) |
 
@@ -69,6 +71,7 @@ AI-Account-Toolkit/
 - **[openai-auto-register](packages/openai/openai-auto-register/README.md)**: 强化版流水线，具备较强的反检测与验证码对抗能力。
 - **[free-unofficial-api](packages/openai/free-unofficial-openai-api/README.md)**: 支持 GPT-4o 及其最新音频预览模型的免费 API 服务。
 - **[ab-card](packages/openai/ab-card/README.md)**: 自动开通 ChatGPT Business/Plus 套餐（首月免月费）。
+- **[oai-Team-SSO-OIDC](packages/openai/oai-Team-SSO-OIDC/README.md)**: OpenAI Team SSO OIDC 协议实现，支持企业级注册流程。
 
 ### 🛡️ 逆向与通用工具 (packages/general)
 
@@ -76,6 +79,13 @@ AI-Account-Toolkit/
 - **[open-proxy-ai](packages/general/open-proxy-ai/README.md)**: 针对 GPT-4o 深度优化的极速逆向代理服务。
 - **[any-auto-register](packages/general/any-auto-register/README.md)**: 模块化账号注册框架，支持多平台扩展。
 - **[all-in-one-register](packages/general/all-in-one-register/README.md)**: 集成 OpenAI/Grok/Tavily 的综合自动化注册机。
+
+### 📜 Codex 模块 (packages/codex)
+
+- **[CPA-Manager-Plus](packages/codex/CPA-Manager-Plus/README.md)**: Codex Plus Account 管理工具，支持 Token 批量管理与转换。
+- **[codex-lb](packages/codex/codex-lb/README.md)**: Codex 负载均衡器。
+- **[codex-register](packages/codex/codex-register/README.md)**: Codex 账号协议注册机。
+- **[codex-register-fix](packages/codex/codex-register-fix/README.md)**: Codex 注册修复增强版。
 
 ### 📧 邮箱服务 (packages/email)
 
@@ -146,7 +156,7 @@ find . -name "requirements.txt" -not -path "*/node_modules/*" -exec pip install 
 
 ---
 
-## 📋 子模块列表 (共 27 个)
+## 📋 子模块列表 (共 29 个)
 
 | 分类 | 路径 | 核心功能 |
 | :--- | :--- | :--- |
@@ -179,4 +189,4 @@ find . -name "requirements.txt" -not -path "*/node_modules/*" -exec pip install 
 
 本仓库提供的所有内容仅供学习与参考，开发者不对因使用本工具导致的账号封禁、数据丢失或任何直接/间接损失负责。如有侵权内容，请联系删除。
 
-**License**: [MIT](LICENSE) | **Updated**: 2026-05-13 | **Version**: 2.5.0
+**License**: [MIT](LICENSE) | **Updated**: 2026-06-09 | **Version**: 2.6.0

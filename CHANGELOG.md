@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file. This projec
 
 ---
 
+## [2.6.0] - 2026-06-09
+
+### ✨ Added
+- **team/**: ChatGPT Team 纯协议注册机，支持 Token 续签、批量注册与动态代理。
+  - 支持 `--check-tokens` 命令进行 Token 自动续签
+  - 支持多线程批量注册，防止 Cloudflare 拦截
+  - 导出 CPA 格式 Token，可转换为 sub2api 格式
+- **CPA-Manager-Plus** (`packages/codex/CPA-Manager-Plus`): Codex Plus Account 管理工具，支持 Token 批量管理与格式转换。
+- **oai-Team-SSO-OIDC** (`packages/openai/oai-Team-SSO-OIDC`): OpenAI Team SSO OIDC 协议实现，支持企业级注册流程。
+
+### 📝 Documentation
+- 为 `team/` 目录添加完整 README 文档
+- 更新主 README，新增 Codex 模块分类
+- 子模块总数从 27 个增加到 29 个
+
+---
+
 ## [2.5.0] - 2026-05-13
 
 ### ✨ Added
