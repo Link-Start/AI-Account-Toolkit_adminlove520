@@ -94,3 +94,15 @@
 [submodule "packages/openai/gpt-trahatel"]
 	path = packages/openai/gpt-trahatel
 	url = https://github.com/gfhfyjbr/gpt-trahatel.git
+[submodule "packages/grok/grok-register-aaronl"]
+	path = packages/grok/grok-register-aaronl
+	url = https://github.com/AaronL725/grok-register.git
+[submodule "packages/K12/K12-Space-Automation"]
+	path = packages/K12/K12-Space-Automation
+	url = https://github.com/BFanSYe/K12-Space-Automation.git
+[submodule "packages/K12/chatgpt-register-sub2api"]
+	path = packages/K12/chatgpt-register-sub2api
+	url = https://github.com/akihitohyh/chatgpt-register-sub2api.git
+[submodule "packages/general/sub2api"]
+	path = packages/general/sub2api
+	url = https://github.com/Wei-Shaw/sub2api.git

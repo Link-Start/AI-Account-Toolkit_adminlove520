@@ -1,0 +1,176 @@
+name: Submodule Health Check
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # 每天早上6点运行
+  workflow_dispatch: # 支持手动触发
+  repository_dispatch:
+    types: [submodule-health-check]
+
+permissions:
+  issues: write
+
+jobs:
+  check-submodules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check submodule health
+        id: check
+        run: |
+          echo "### Submodule Health Check Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Submodule | URL | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-----|--------|" >> $GITHUB_STEP_SUMMARY
+
+          UNHEALTHY=0
+
+          # 获取所有子模块路径和URL
+          while IFS= read -r sm_path; do
+            sm_name=$(echo "$sm_path" | sed 's|packages/||' | tr '/' '-')
+            URL=$(git config --file .gitmodules --get "submodule.$sm_path.url")
+
+            echo "Checking: $sm_path ($URL)"
+
+            # 检查 HTTP 状态码
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time 30 "$URL")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "| $sm_path | $URL | ✅ OK |" >> $GITHUB_STEP_SUMMARY
+              echo "  Status: $HTTP_CODE - OK"
+            elif [ "$HTTP_CODE" = "404" ]; then
+              echo "| $sm_path | $URL | ❌ 404 Not Found |" >> $GITHUB_STEP_SUMMARY
+              echo "  Status: $HTTP_CODE - 404 Not Found"
+              UNHEALTHY=1
+            elif [ "$HTTP_CODE" = "403" ]; then
+              echo "| $sm_path | $URL | ⚠️ 403 Forbidden |" >> $GITHUB_STEP_SUMMARY
+              echo "  Status: $HTTP_CODE - 403 Forbidden"
+              UNHEALTHY=1
+            elif [ "$HTTP_CODE" = "000" ]; then
+              echo "| $sm_path | $URL | 🔴 Connection Failed |" >> $GITHUB_STEP_SUMMARY
+              echo "  Status: $HTTP_CODE - Connection Failed"
+              UNHEALTHY=1
+            else
+              echo "| $sm_path | $URL | ⚠️ HTTP $HTTP_CODE |" >> $GITHUB_STEP_SUMMARY
+              echo "  Status: $HTTP_CODE - Unknown"
+              UNHEALTHY=1
+            fi
+          done < <(git config --file .gitmodules --get-regexp path | awk '{print $2}')
+
+          echo ""
+          echo "UNHEALTHY=$UNHEALTHY" >> $GITHUB_ENV
+
+      - name: Create issue if unhealthy submodules found
+        if: env.UNHEALTHY == '1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: submodules } = await github.rest.git.listSubmodules({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            // Get the report from the previous step
+            const fs = require('fs');
+            let report = '## ⚠️ Submodule Health Check Failed\n\n以下子模块可能存在访问问题，请检查：\n\n';
+
+            // Parse gitmodules directly
+            const { execSync } = require('child_process');
+            const gitmodules = execSync('git config --file .gitmodules --list', {encoding: 'utf8'});
+            const lines = gitmodules.split('\n');
+
+            let currentSubmodule = null;
+            let urls = {};
+
+            for (const line of lines) {
+              if (line.startsWith('submodule.')) {
+                const match = line.match(/^submodule\.(.+)\.url\s*=\s*(.+)$/);
+                if (match) {
+                  currentSubmodule = match[1];
+                  urls[currentSubmodule] = match[2];
+                }
+              }
+            }
+
+            // Check each submodule
+            for (const [name, url] of Object.entries(urls)) {
+              try {
+                const response = await fetch(url, {
+                  method: 'HEAD',
+                  redirect: 'follow',
+                  signal: AbortSignal.timeout(30000)
+                });
+
+                if (!response.ok && response.status !== 200) {
+                  report += `- **${name}**\n`;
+                  report += `  - URL: ${url}\n`;
+                  report += `  - 状态码: ${response.status}\n`;
+                  report += `  - 问题: ${response.status === 404 ? '仓库不存在或已被删除' : response.status === 403 ? '访问被拒绝，可能需要认证或仓库已私有化' : '未知错误'}\n\n`;
+                }
+              } catch (error) {
+                report += `- **${name}**\n`;
+                report += `  - URL: ${url}\n`;
+                report += `  - 状态码: Connection Failed\n`;
+                report += `  - 问题: 无法连接到仓库 - ${error.message}\n\n`;
+              }
+            }
+
+            report += '---\n\n';
+            report += '> 🤖 此问题由自动检测工作流创建，请尽快处理。\n';
+
+            // Check for existing open issues
+            const { data: existingIssues } = await github.rest.issues.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['submodule-error']
+            });
+
+            if (existingIssues.length > 0) {
+              console.log('Found existing issue, updating...');
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                title: `⚠️ [自动检测] 子模块访问异常 - ${new Date().toISOString().split('T')[0]}`,
+                body: report
+              });
+            } else {
+              console.log('Creating new issue...');
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `⚠️ [自动检测] 子模块访问异常 - ${new Date().toISOString().split('T')[0]}`,
+                body: report,
+                labels: ['submodule-error', 'automated']
+              });
+            }
+
+      - name: Close issue if all healthy
+        if: env.UNHEALTHY == '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find and close any existing submodule-error issues
+            const { data: existingIssues } = await github.rest.issues.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['submodule-error']
+            });
+
+            if (existingIssues.length > 0) {
+              console.log(`Closing ${existingIssues.length} issue(s)...`);
+              for (const issue of existingIssues) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed',
+                  body: issue.body + '\n\n---\n\n> ✅ 所有子模块已恢复正常，此问题已自动关闭。'
+                });
+              }
+            }

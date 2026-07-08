@@ -19,6 +19,7 @@
   - [🤖 OpenAI 模块](#-openai-模块)
   - [🛡️ 逆向与通用工具](#-逆向与通用工具)
   - [📧 邮箱服务](#-邮箱服务)
+  - [🎓 K12 教育工具](#-k12-教育工具)
   - [🌐 其他 AI 生态](#-其他-ai-生态)
 - [🚀 快速开始](#-快速开始)
 - [📋 子模块列表](#-子模块列表)
@@ -37,6 +38,7 @@ AI-Account-Toolkit/
 ├── 📂 team_all-in-one/         # Team 注册一站式管理后台
 ├── 📂 codex-oauth-automation/  # Codex OAuth 自动化 Chrome 插件
 ├── 📂 Extensions/              # 浏览器自动化增强插件集
+│   └── chatgpt-work           # ChatGPT 工作区管理插件（车队管理、批量上车、Gmail 别名生成）
 ├── 📂 freemail/                # 临时邮箱服务端 (Cloudflare Workers)
 ├── 📂 openai_pool_v6/          # OpenAI 账号池编排器 (旗舰版)
 ├── 📂 ClashVerge_/             # 代理负载均衡与轮询配置
@@ -48,6 +50,7 @@ AI-Account-Toolkit/
     ├── 🖱️ cursor/               # 账号自动注册
     ├── 🐦 grok/                 # x.ai 批量注册与转换
     ├── 📧 email/                # 临时邮箱与 OAuth 提码
+    ├── 🎓 K12/                  # K12 教育工具集
     └── 🛠️ general/              # 逆向聚合与通用工具
 ```
 
@@ -64,6 +67,7 @@ AI-Account-Toolkit/
 | **team** | ChatGPT Team 纯协议注册机，支持 Token 续签与批量注册。 | [README](team/README.md) |
 | **team-all-in-one** | 可视化注册管理系统，支持多邮箱源、代理轮换及 Token 导出。 | [README](team_all-in-one/README.md) |
 | **OpenAI Orchestrator** | 自动化维护账号池，支持 Token 状态监控与多平台分发。 | [V6 README](openai_pool_orchestrator-V6/README.md) |
+| **chatgpt-work** | ChatGPT 工作区管理浏览器插件，支持车队管理、批量上车、Gmail 别名生成。 | [README](Extensions/chatgpt-work/README.md) |
 
 ### 🤖 OpenAI 模块 (packages/openai)
 
@@ -95,6 +99,23 @@ AI-Account-Toolkit/
 - **[cloudflare-temp-email](packages/email/cloudflare-temp-email/README.md)**: 基于 Cloudflare 的工业级临时邮箱，支持 Rust WASM 解析。
 - **[tempmail](packages/email/tempmail/README.md)**: 自托管 Docker 临时邮箱方案，带管理后台。
 - **[ms-oauth2-api](packages/email/ms-oauth2-api/README.md)**: 微软系邮箱（Hotmail/Outlook）OAuth2 自动取件 API。
+
+### 🎓 K12 教育工具 (packages/K12)
+
+> ⚠️ **K12 Gmail 服务**: https://gmail-k12.duckdns.org/
+
+- **[K12-Space-Automation](packages/K12/K12-Space-Automation/)**: K12 Space 自动化管理工具
+- **[chatgpt-register-sub2api](packages/K12/chatgpt-register-sub2api/)**: ChatGPT 注册转 sub2api 工具
+
+### 🐦 Grok 模块 (packages/grok)
+
+- **[grok-register](packages/grok/grok-register/)**: Grok x.ai 批量注册机（509992828 版）
+- **[grok-register-aaronl](packages/grok/grok-register-aaronl/)**: Grok x.ai 批量注册机（AaronL725 版）
+- **[grok2api](packages/grok/grok2api/)**: Grok API 协议转换工具
+
+### 🛠️ General 通用工具 (packages/general)
+
+- **[sub2api](packages/general/sub2api/)**: sub2api 格式转换工具
 
 ---
 
@@ -159,7 +180,7 @@ find . -name "requirements.txt" -not -path "*/node_modules/*" -exec pip install 
 
 ---
 
-## 📋 子模块列表 (共 32 个)
+## 📋 子模块列表 (共 36 个)
 
 | 分类 | 路径 | 核心功能 |
 | :--- | :--- | :--- |
@@ -169,7 +190,8 @@ find . -name "requirements.txt" -not -path "*/node_modules/*" -exec pip install 
 | **Codex** | `packages/codex/` | 协议注册、LB 负载均衡、授权修复 |
 | **Cursor** | `packages/cursor/` | 账号自动注册与管理 |
 | **Grok** | `packages/grok/` | x.ai 批量注册机、API 协议转换 |
-| **General** | `packages/general/` | **gpt4free**, 注册聚合, 支付自动化, 免税地址生成 |
+| **K12** | `packages/K12/` | K12 教育工具集、ChatGPT 注册转换 |
+| **General** | `packages/general/` | **gpt4free**, **sub2api**, 注册聚合, 支付自动化, 免税地址生成 |
 
 ---
 
@@ -179,6 +201,19 @@ find . -name "requirements.txt" -not -path "*/node_modules/*" -exec pip install 
 2. **凭据安全**: 严禁将包含 API Key、密码或代理信息的配置文件上传至公共仓库。
 3. **版本同步**: 建议定期运行 `git submodule update --remote` 获取上游仓库的最稳定补丁。
 4. **环境要求**: 建议使用 Python 3.10+ 环境以获得最佳兼容性。
+
+---
+
+## 🔧 自动化工流程
+
+### 子模块健康检测
+
+| 工作流 | 描述 | 触发时间 |
+| :--- | :--- | :--- |
+| **[submodule-sync](.github/workflows/submodule-sync.yml)** | 自动同步所有子模块到最新版本 | 每天凌晨 |
+| **[submodule-health-check](.github/workflows/submodule-health-check.yml)** | 检测子模块 404/403 错误并自动创建 Issue | 每天早上 6 点 |
+
+> 💡 当检测到子仓库不可用时，系统会自动创建带有 `submodule-error` 标签的 Issue，方便追踪处理。
 
 ---
 

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatGPT Workspace Joiner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">Workspace Joiner</span>
+          <span class="logo-version">v4.0</span>
+        </div>
+      </div>
+      <div class="status-dot" id="status-dot" title="等待 ChatGPT 会话..."></div>
+    </div>
+    <!-- User bar -->
+    <div class="user-bar" id="user-bar">
+      <span class="user-bar-waiting">● 未检测到会话，请先打开 chatgpt.com 并登录</span>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tab-workspace" data-tab="workspace">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      Workspace
+    </button>
+    <button class="tab" id="tab-credential" data-tab="credential">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <rect x="5" y="11" width="14" height="10" rx="2"/>
+        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+        <circle cx="12" cy="16" r="1" fill="currentColor"/>
+      </svg>
+      凭证
+    </button>
+    <button class="tab" id="tab-gmail" data-tab="gmail">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      Gmail 别名
+    </button>
+    <button class="tab" id="tab-log" data-tab="log">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      日志
+      <span class="log-badge" id="log-badge" style="display:none">0</span>
+    </button>
+  </div>
+
+  <!-- Panel: Workspace -->
+  <div class="panel active" id="panel-workspace">
+    <!-- Workspace ID Input -->
+    <div class="section">
+      <div class="section-label">
+        <span>母号 Workspace ID</span>
+        <span class="ws-count" id="ws-count">0 个</span>
+      </div>
+      <div class="textarea-wrapper">
+        <textarea
+          class="ws-textarea"
+          id="ws-input"
+          placeholder="一行一个 UUID&#10;acfb4e38-524c-4dc8-b4cf-fb3d0ce28b25&#10;5e4c9b31-1b4e-4887-839b-607597928d7c"
+          spellcheck="false"
+        ></textarea>
+      </div>
+      <div class="ws-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-clear-ws">清空</button>
+        <button class="btn btn-save" id="btn-save">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          保存
+        </button>
+      </div>
+      <p class="hint">每行一个 UUID，或用逗号分隔。<br>request = 主动申请加入 · accept = 接受已有邀请</p>
+    </div>
+
+    <!-- Advanced Settings -->
+    <div class="section collapsible" id="section-advanced">
+      <button class="collapsible-trigger" id="btn-advanced">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="chevron">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+        高级设置
+      </button>
+      <div class="collapsible-body" id="advanced-body">
+        <div class="advanced-grid">
+          <div class="field">
+            <label class="field-label">间隔 (ms)</label>
+            <input class="field-input" id="cfg-interval" type="number" min="500" step="100" value="1500" />
+          </div>
+          <div class="field">
+            <label class="field-label">最大重试</label>
+            <input class="field-input" id="cfg-retries" type="number" min="0" max="10" value="3" />
+          </div>
+          <div class="field">
+            <label class="field-label">退避 (ms)</label>
+            <input class="field-input" id="cfg-backoff" type="number" min="1000" step="500" value="5000" />
+          </div>
+          <div class="field">
+            <label class="field-label">轮询 (ms)</label>
+            <input class="field-input" id="cfg-poll" type="number" min="5000" step="1000" value="20000" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-bar">
+      <button class="btn btn-ghost" id="btn-refresh-session">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        刷新 AT
+      </button>
+      <div class="btn-group">
+        <button class="btn btn-accept" id="btn-accept" disabled>
+          Accept
+        </button>
+        <button class="btn btn-request" id="btn-request" disabled>
+          Request
+        </button>
+      </div>
+    </div>
+
+    <!-- Running indicator -->
+    <div class="running-indicator" id="running-indicator" style="display:none">
+      <div class="spinner"></div>
+      <span id="running-text">处理中...</span>
+    </div>
+  </div>
+
+  <!-- Panel: Credential -->
+  <div class="panel" id="panel-credential">
+    <!-- Source & Format Controls -->
+    <div class="section">
+      <div class="section-label">
+        <span>Session 数据源</span>
+        <span class="cred-status" id="cred-status"></span>
+      </div>
+      <div class="cred-source-row">
+        <input
+          class="field-input cred-url-input"
+          id="cred-url"
+          type="text"
+          value="https://chatgpt.com/api/auth/session"
+          placeholder="API URL"
+          spellcheck="false"
+        />
+        <button class="btn btn-accept btn-sm" id="btn-fetch-session">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          获取
+        </button>
+      </div>
+      <p class="hint">默认读取当前 chatgpt.com 页面的 session，也可以手动输入 JSON 数据。</p>
+    </div>
+
+    <!-- Format Selector -->
+    <div class="section">
+      <div class="section-label">
+        <span>输出格式</span>
+      </div>
+      <div class="cred-format-row">
+        <button class="cred-fmt-btn active" id="fmt-raw" data-fmt="raw">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          原始 JSON
+        </button>
+        <button class="cred-fmt-btn" id="fmt-cpa" data-fmt="cpa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+          CPA JSON
+        </button>
+        <button class="cred-fmt-btn" id="fmt-sub" data-fmt="sub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          sub2api bundle
+        </button>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="section cred-preview-section">
+      <div class="section-label">
+        <span>预览</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="cred-lines" id="cred-lines"></span>
+          <button class="btn btn-ghost btn-sm" id="btn-cred-copy" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            复制
+          </button>
+          <button class="btn btn-ghost btn-sm" id="btn-cred-download" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            下载
+          </button>
+        </div>
+      </div>
+      <div class="cred-preview-wrap">
+        <pre class="cred-preview" id="cred-preview">点击「获取」读取 session，或从输入框手动粘贴 JSON 后点「转换」</pre>
+      </div>
+      <div class="cred-msg" id="cred-msg"></div>
+    </div>
+
+    <!-- Manual input fallback -->
+    <div class="section">
+      <div class="section-label">
+        <span>手动输入 JSON</span>
+        <button class="btn btn-ghost btn-sm" id="btn-cred-convert">转换</button>
+      </div>
+      <textarea
+        class="ws-textarea"
+        id="cred-manual"
+        placeholder="粘贴 ChatGPT session JSON 或其他格式数据..."
+        style="min-height:72px"
+        spellcheck="false"
+      ></textarea>
+    </div>
+  </div>
+
+  <!-- Panel: Gmail Alias -->
+  <div class="panel" id="panel-gmail">
+    <div class="section">
+      <div class="section-label">
+        <span>基础 Gmail 账号</span>
+      </div>
+      <div class="input-with-suffix">
+        <input class="field-input" id="gmail-base" type="email" placeholder="yourname@gmail.com" />
+      </div>
+      <p class="hint">Gmail 别名格式：<code>name+alias@gmail.com</code>，所有邮件将发到原账号。</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">
+        <span>别名设置</span>
+      </div>
+      <div class="advanced-grid">
+        <div class="field" style="grid-column: span 2">
+          <label class="field-label">自定义前缀（留空则随机）</label>
+          <input class="field-input" id="alias-prefix" type="text" placeholder="例如: work2025" />
+        </div>
+        <div class="field">
+          <label class="field-label">随机长度</label>
+          <input class="field-input" id="alias-length" type="number" min="4" max="16" value="8" />
+        </div>
+        <div class="field">
+          <label class="field-label">生成数量</label>
+          <input class="field-input" id="alias-count" type="number" min="1" max="50" value="5" />
+        </div>
+      </div>
+
+      <div class="alias-type-group">
+        <label class="alias-type-label">随机字符类型：</label>
+        <div class="checkbox-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="alias-letters" checked />
+            <span>字母</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="alias-numbers" checked />
+            <span>数字</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="alias-dots" />
+            <span>点（.）</span>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn btn-request btn-full" id="btn-gen-alias">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <polyline points="16 3 21 3 21 8"/>
+          <line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/>
+          <line x1="15" y1="15" x2="21" y2="21"/>
+        </svg>
+        生成别名邮箱
+      </button>
+    </div>
+
+    <!-- Generated Aliases List -->
+    <div class="section" id="aliases-section" style="display:none">
+      <div class="section-label">
+        <span>生成结果</span>
+        <button class="btn btn-ghost btn-sm" id="btn-copy-all">复制全部</button>
+      </div>
+      <div class="alias-list" id="alias-list"></div>
+    </div>
+  </div>
+
+  <!-- Panel: Log -->
+  <div class="panel" id="panel-log">
+    <div class="log-toolbar">
+      <span class="log-count" id="log-count">0 条记录</span>
+      <button class="btn btn-ghost btn-sm" id="btn-clear-log">清空日志</button>
+    </div>
+    <div class="log-body" id="log-body">
+      <div class="log-empty">暂无日志</div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
